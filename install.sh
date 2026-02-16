@@ -1,15 +1,27 @@
 #!/bin/bash
 # FlashRSS One-Command Installer for Linux/macOS
 
+# Hata oluşursa durdurma, temizle
 clear
-echo -e "\033[0;36m"
-echo "  ______ _               _       _____   _____ _____ "
-echo " |  ____| |             | |     |  __ \ / ____/ ____|"
-echo " | |__  | | __ _ ___  __| |__   | |__) | (___| (___  "
-echo " |  __| | |/ _` / __|/ _` '_ \  |  _  / \___ \\___ \ "
-echo " | |    | | (_| \__ \ (_| | | | | | \ \ ____) |___) |"
-echo " |_|    |_|\__,_|___/\__,_| |_| |_|  \_\_____/_____/ "
-echo -e "\033[0m"
+
+# Renk kodları
+CYAN='\033[0;36m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+
+# Logo Başlangıcı (EOF ile güvenli yazdırma)
+echo -e "${CYAN}"
+cat << "EOF"
+  ______ _               _       _____   _____ _____ 
+ |  ____| |             | |     |  __ \ / ____/ ____|
+ | |__  | | __ _ ___  __| |__   | |__) | (___| (___  
+ |  __| | |/ _` / __|/ _` '_ \  |  _  / \___ \\___ \ 
+ | |    | | (_| \__ \ (_| | | | | | \ \ ____) |___) |
+ |_|    |_|\__,_|___/\__,_| |_| |_|  \_\_____/_____/ 
+EOF
+echo -e "${NC}"
 
 echo "Welcome to FlashRSS! This script will set up everything you need."
 read -p "Do you want to proceed with the installation? (y/n): " confirm
@@ -21,14 +33,14 @@ fi
 # --- SMART INSTALLATION LOGIC ---
 if [ ! -f "package.json" ]; then
     INSTALL_DIR="$HOME/flashRSS"
-    echo -e "\n\033[0;34m📂 Installation Path: $INSTALL_DIR\033[0m"
+    echo -e "\n${CYAN}📂 Installation Path: $INSTALL_DIR${NC}"
     mkdir -p "$INSTALL_DIR"
     cd "$INSTALL_DIR"
 
     # Clone via Git if available, otherwise download ZIP
     if command -v git &> /dev/null; then
         echo -e "⬇️  Cloning repository..."
-        git clone https://github.com/blackflash100/flashRSS.git . 2>/dev/null || echo "Folder not empty, pulling updates..." && git pull
+        git clone https://github.com/blackflash100/flashRSS.git . 2>/dev/null || (echo "Folder not empty, pulling updates..." && git pull)
     else
         echo -e "⬇️  Downloading ZIP..."
         curl -L https://github.com/blackflash100/flashRSS/archive/refs/heads/main.zip -o repo.zip
@@ -39,31 +51,31 @@ if [ ! -f "package.json" ]; then
 fi
 # ------------------------------
 
-echo -e "\n\033[0;33m🔍 Checking requirements...\033[0m"
+echo -e "\n${YELLOW}🔍 Checking requirements...${NC}"
 
 if ! command -v node &> /dev/null; then
-    echo -e "\033[0;31m❌ Node.js is not installed.\033[0m"
+    echo -e "${RED}❌ Node.js is not installed.${NC}"
     echo "Please install Node.js from https://nodejs.org/ and try again."
     exit 1
 fi
 
-echo -e "\033[0;32m✅ Starting installation...\033[0m"
+echo -e "${GREEN}✅ Starting installation...${NC}"
 
-echo -e "\n\033[0;33m📦 Installing Backend Dependencies...\033[0m"
+echo -e "\n${YELLOW}📦 Installing Backend Dependencies...${NC}"
 npm install
 
-echo -e "\n\033[0;33m📦 Installing Frontend Dependencies...\033[0m"
+echo -e "\n${YELLOW}📦 Installing Frontend Dependencies...${NC}"
 cd client && npm install
 
-echo -e "\n\033[0;33m🏗️ Building Frontend...\033[0m"
+echo -e "\n${YELLOW}🏗️ Building Frontend...${NC}"
 npm run build
 cd ..
 
-echo -e "\n\033[0;33m🔗 Linking global command...\033[0m"
+echo -e "\n${YELLOW}🔗 Linking global command...${NC}"
 sudo npm link --force || npm link --force
 
-echo -e "\n\033[0;32m✅ INSTALLATION COMPLETE!\033[0m"
-echo -e "\033[0;36m🚀 You can now start the app anytime by typing: flashRSS start\033[0m"
+echo -e "\n${GREEN}✅ INSTALLATION COMPLETE!${NC}"
+echo -e "${CYAN}🚀 You can now start the app anytime by typing: flashRSS start${NC}"
 
 read -p "Do you want to start the app now? (y/n): " startNow
 if [[ $startNow == "y" ]]; then
