@@ -1,7 +1,5 @@
 #!/bin/bash
-
-# FlashRSS One-Command Installer for Linux/macOS
-# Usage: curl -sSL https://raw.githubusercontent.com/blackflash100/flashRSS/main/install.sh | bash
+# FlashRSS Akıllı Yükleyici (Linux/macOS)
 
 clear
 echo -e "\033[0;36m"
@@ -13,59 +11,63 @@ echo " | |    | | (_| \__ \ (_| | | | | | \ \ ____) |___) |"
 echo " |_|    |_|\__,_|___/\__,_| |_| |_|  \_\_____/_____/ "
 echo -e "\033[0m"
 
-echo "Welcome to FlashRSS! This script will set up everything you need."
-read -p "Do you want to proceed with the installation? (y/n): " confirm
+echo "FlashRSS Kurulumuna Hos Geldiniz!"
+read -p "Devam etmek istiyor musunuz? (y/n): " confirm
 if [[ $confirm != "y" ]]; then
-    echo "Installation cancelled."
+    echo "İptal edildi."
     exit 1
 fi
 
-echo -e "\n\033[0;33m🔍 Checking requirements...\033[0m"
+# --- AKILLI KONUM BELİRLEME ---
+if [ ! -f "package.json" ]; then
+    INSTALL_DIR="$HOME/flashRSS"
+    echo -e "\n\033[0;34m📂 Hedef Klasör: $INSTALL_DIR\033[0m"
+    mkdir -p "$INSTALL_DIR"
+    cd "$INSTALL_DIR"
 
-# 1. Check for Node.js
-if ! command -v node &> /dev/null; then
-    echo -e "\033[0;31m❌ Node.js is not installed.\033[0m"
-    read -p "Would you like to try installing Node.js? (y/n): " installNode
-    if [[ $installNode == "y" ]]; then
-        if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-            echo "📦 Installing Node.js via apt..."
-            curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
-            sudo apt-get install -y nodejs
-        elif [[ "$OSTYPE" == "darwin"* ]]; then
-            if command -v brew &> /dev/null; then
-                echo "📦 Installing Node.js via Homebrew..."
-                brew install node
-            else
-                echo -e "\033[0;31m❌ Homebrew not found. Please install Node.js from https://nodejs.org/\033[0m"
-                exit 1
-            fi
-        else
-            echo -e "\033[0;31m❌ Unsupported OS for automatic Node.js install. Please install it manually.\033[0m"
-            exit 1
-        fi
+    # Git varsa git ile çek, yoksa curl ile indir
+    if command -v git &> /dev/null; then
+        echo -e "⬇️  Git ile klonlanıyor..."
+        # Mevcut klasör boş değilse hata vermesin diye . koyduk
+        git clone https://github.com/blackflash100/flashRSS.git . 2>/dev/null || echo "Klasör zaten dolu, güncelleniyor..." && git pull
     else
-        exit 1
+        echo -e "⬇️  ZIP olarak indiriliyor..."
+        curl -L https://github.com/blackflash100/flashRSS/archive/refs/heads/main.zip -o repo.zip
+        unzip -o repo.zip
+        mv flashRSS-main/* .
+        rm -rf flashRSS-main repo.zip
     fi
 fi
+# ------------------------------
 
-echo -e "\033[0;32m✅ Requirements met. Starting installation...\033[0m"
+echo -e "\n\033[0;33m🔍 Gereksinimler kontrol ediliyor...\033[0m"
 
-echo -e "\n\033[0;33m📦 Installing Backend Dependencies...\033[0m"
+if ! command -v node &> /dev/null; then
+    echo -e "\033[0;31m❌ Node.js yüklü değil.\033[0m"
+    echo "Lütfen Node.js yükleyip tekrar deneyin."
+    exit 1
+fi
+
+echo -e "\033[0;32m✅ Başlıyoruz...\033[0m"
+
+echo -e "\n\033[0;33m📦 Backend Kurulumu...\033[0m"
 npm install
 
-echo -e "\n\033[0;33m📦 Installing Frontend Dependencies...\033[0m"
+echo -e "\n\033[0;33m📦 Frontend Kurulumu...\033[0m"
 cd client && npm install
 
-echo -e "\n\033[0;33m🏗️ Building Frontend...\033[0m"
+echo -e "\n\033[0;33m🏗️ Frontend Derleniyor (Build)...\033[0m"
 npm run build
-
 cd ..
 
-echo -e "\n\033[0;33m🔗 Linking global command...\033[0m"
+echo -e "\n\033[0;33m🔗 Global Komut Ayarlanıyor...\033[0m"
+# Sudo gerekebilir, hatayı yutmayalım
 sudo npm link --force || npm link --force
 
-echo -e "\n\033[0;32m✅ Installation Complete!\033[0m"
-echo -e "\033[0;36m🚀 You can now start the app anytime by typing: flashRSS start\033[0m"
-echo "Starting it for you now..."
+echo -e "\n\033[0;32m✅ KURULUM BAŞARILI!\033[0m"
+echo -e "\033[0;36m🚀 Başlatmak için terminale şunu yazın: flashRSS start\033[0m"
 
-node server.js
+read -p "Şimdi başlatmak ister misiniz? (y/n): " startNow
+if [[ $startNow == "y" ]]; then
+    flashRSS start
+fi
