@@ -12,6 +12,8 @@
 
 [Features](#-features) • [Quick Start](#-quick-start) • [Usage](#-usage) • [Contributing](#-contributing)
 
+![FlashRSS Screenshot](png/screenshot.png)
+
 </div>
 
 ---
