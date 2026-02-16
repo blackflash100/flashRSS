@@ -1,4 +1,4 @@
-# FlashRSS Akıllı Yükleyici (Windows)
+# FlashRSS One-Command Installer for Windows
 # Usage: powershell -ExecutionPolicy ByPass -File install.ps1
 
 Clear-Host
@@ -6,42 +6,42 @@ Write-Host @"
   ______ _               _       _____   _____ _____ 
  |  ____| |             | |     |  __ \ / ____/ ____|
  | |__  | | __ _ ___  __| |__   | |__) | (___| (___  
- |  __| | |/ _` / __|/ _` '_ \  |  _  / \___ \\___ \\ 
+ |  __| | |/ _` / __|/ _` '_ \  |  _  / \___ \\___ \ 
  | |    | | (_| \__ \ (_| | | | | | \ \ ____) |___) |
  |_|    |_|\__,_|___/\__,_| |_| |_|  \_\_____/_____/ 
 "@ -ForegroundColor Cyan
 
 Write-Host ""
-Write-Host "FlashRSS Kurulumuna Hos Geldiniz!" -ForegroundColor White
-$confirm = Read-Host "Kuruluma baslamak istiyor musunuz? (e/h)"
-if ($confirm -ne 'e' -and $confirm -ne 'y') {
-    Write-Host "İptal edildi." -ForegroundColor Red
+Write-Host "Welcome to FlashRSS! This script will set up everything you need." -ForegroundColor White
+$confirm = Read-Host "Do you want to proceed with the installation? (y/n)"
+if ($confirm -ne 'y') {
+    Write-Host "Installation cancelled." -ForegroundColor Red
     exit
 }
 
-# --- AKILLI KONUM BELİRLEME ---
-# Eğer scriptin çalıştığı yerde package.json yoksa, bu bir uzaktan kurulumdur.
+# --- SMART INSTALLATION LOGIC ---
+# If package.json is missing, assume remote install and download repo to User Home
 if (-not (Test-Path "package.json")) {
     $InstallPath = "$HOME\flashRSS"
-    Write-Host "`n📂 Kurulum Yeri: $InstallPath" -ForegroundColor Cyan
+    Write-Host "`n📂 Installation Path: $InstallPath" -ForegroundColor Cyan
     
     if (-not (Test-Path $InstallPath)) {
         New-Item -ItemType Directory -Force -Path $InstallPath | Out-Null
     }
     Set-Location $InstallPath
 
-    # Dosyaları İndir
+    # Download Repository
     if (-not (Test-Path "package.json")) {
-        Write-Host "⬇️  GitHub'dan son sürüm indiriliyor..." -ForegroundColor Yellow
+        Write-Host "⬇️  Downloading latest version from GitHub..." -ForegroundColor Yellow
         $zipFile = "$InstallPath\repo.zip"
         try {
             [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
             Invoke-WebRequest -Uri "https://github.com/blackflash100/flashRSS/archive/refs/heads/main.zip" -OutFile $zipFile
             
-            Write-Host "📦 Dosyalar çıkartılıyor..." -ForegroundColor Yellow
+            Write-Host "📦 Extracting files..." -ForegroundColor Yellow
             Expand-Archive -Path $zipFile -DestinationPath $InstallPath -Force
             
-            # Zip içinden çıkan klasördeki dosyaları ana dizine taşı
+            # Move files from subfolder to root
             $subFolder = Get-ChildItem -Path $InstallPath -Directory | Where-Object { $_.Name -like "flashRSS-*" } | Select-Object -First 1
             if ($subFolder) {
                 Get-ChildItem -Path $subFolder.FullName | Move-Item -Destination $InstallPath -Force
@@ -50,45 +50,45 @@ if (-not (Test-Path "package.json")) {
             Remove-Item $zipFile
         }
         catch {
-            Write-Host "❌ İndirme hatası: $_" -ForegroundColor Red
+            Write-Host "❌ Download failed: $_" -ForegroundColor Red
             exit
         }
     }
 }
 # ------------------------------
 
-Write-Host "`n🔍 Gereksinimler kontrol ediliyor..." -ForegroundColor Yellow
+Write-Host "`n🔍 Checking requirements..." -ForegroundColor Yellow
 
-# Node.js Kontrolü
+# Check for Node.js
 if (!(Get-Command node -ErrorAction SilentlyContinue)) {
-    Write-Host "❌ Node.js bulunamadi." -ForegroundColor Red
-    Write-Host "Lütfen https://nodejs.org adresinden Node.js yükleyip tekrar deneyin."
+    Write-Host "❌ Node.js is not installed." -ForegroundColor Red
+    Write-Host "Please install Node.js from https://nodejs.org/ and try again."
     exit
 }
 
-Write-Host "✅ Gereksinimler tamam. Kurulum başliyor..." -ForegroundColor Green
+Write-Host "✅ Requirements met. Starting installation..." -ForegroundColor Green
 
-Write-Host "`n📦 Backend paketleri yükleniyor..." -ForegroundColor Yellow
+Write-Host "`n📦 Installing Backend Dependencies..." -ForegroundColor Yellow
 npm install
 
-Write-Host "`n📦 Frontend paketleri yükleniyor..." -ForegroundColor Yellow
+Write-Host "`n📦 Installing Frontend Dependencies..." -ForegroundColor Yellow
 if (Test-Path "client") {
     Set-Location client
     npm install
     
-    Write-Host "`n🏗️ Frontend inşa ediliyor (Build)..." -ForegroundColor Yellow
+    Write-Host "`n🏗️ Building Frontend..." -ForegroundColor Yellow
     npm run build
     Set-Location ..
 }
 
-Write-Host "`n🔗 Global komut oluşturuluyor..." -ForegroundColor Yellow
+Write-Host "`n🔗 Linking global command..." -ForegroundColor Yellow
 npm link --force
 
-Write-Host "`n✅ KURULUM BAŞARILI!" -ForegroundColor Green
-Write-Host "🚀 Uygulamayi başlatmak için şu komutu yazın: flashRSS start" -ForegroundColor Cyan
+Write-Host "`n✅ INSTALLATION COMPLETE!" -ForegroundColor Green
+Write-Host "🚀 You can now start the app anytime by typing: flashRSS start" -ForegroundColor Cyan
 
-# Hemen başlatma seçeneği
-$startNow = Read-Host "Uygulamayı şimdi başlatmak ister misiniz? (e/h)"
-if ($startNow -eq 'e' -or $startNow -eq 'y') {
+# Start immediately option
+$startNow = Read-Host "Do you want to start the app now? (y/n)"
+if ($startNow -eq 'y') {
     flashRSS start
 }
