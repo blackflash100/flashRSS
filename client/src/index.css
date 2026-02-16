@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .clip-text {
+    @apply bg-clip-text text-transparent;
+  }
+}
+
+html, body {
+  height: 100%;
+}
+
+#root {
+  height: 100%;
+}
